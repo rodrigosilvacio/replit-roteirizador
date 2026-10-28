@@ -11,6 +11,36 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /places:
+    get:
+      operationId: searchPlaces
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string, minLength: 3, maxLength: 200 }
+      responses:
+        "200":
+          description: Matching addresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Place" }
+  /route:
+    post:
+      operationId: calculateRoute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RouteInput" }
+      responses:
+        "200":
+          description: Driving route
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RouteResult" }
   /healthz:
     get:
       operationId: healthCheck
@@ -26,6 +56,31 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    Place:
+      type: object
+      required: [label, lat, lon]
+      properties:
+        label: { type: string }
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lon: { type: number, minimum: -180, maximum: 180 }
+    RouteInput:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin: { $ref: "#/components/schemas/Place" }
+        destination: { $ref: "#/components/schemas/Place" }
+    RouteResult:
+      type: object
+      required: [distance, duration, coordinates]
+      properties:
+        distance: { type: number, description: Meters }
+        duration: { type: number, description: Seconds without live traffic }
+        coordinates:
+          type: array
+          description: Longitude latitude pairs
+          items:
+            type: array
+            items: { type: number }
     HealthStatus:
       type: object
       properties:

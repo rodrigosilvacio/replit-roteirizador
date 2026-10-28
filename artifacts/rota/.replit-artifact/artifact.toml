@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Rota — Planejador de rotas"
+description = "Planeje viagens de carro informando origem e destino, com mapa interativo, distância, duração estimada e navegação no Google Maps."
+version = "1.0.0"
+id = "artifacts/rota"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20139
+
+[services.development]
+run = "pnpm --filter @workspace/rota run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rota", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/rota/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20139"
+BASE_PATH = "/"
