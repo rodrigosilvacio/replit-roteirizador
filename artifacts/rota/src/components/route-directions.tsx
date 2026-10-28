@@ -40,6 +40,16 @@ export function RouteDirections({ result, pending }: { result: RouteResult | nul
             ))}
           </div>
           <p className="mt-4 text-xs text-muted-foreground">Planejamento sem orientação por voz ou acompanhamento em tempo real. Respeite a sinalização local; para navegar durante a viagem, abra o Google Maps.</p>
+          <div className="mt-4 rounded-xl bg-primary p-4 text-primary-foreground" data-testid="directions-total-distance">
+            <p className="text-sm font-semibold">Distância total a percorrer</p>
+            <p className="mt-1 text-3xl font-bold">
+              {(result.legs.reduce((total, leg) => total + leg.distance, 0) / 1000).toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })} <span className="text-lg font-medium">km</span>
+            </p>
+            <p className="mt-1 text-xs opacity-80">Soma de todos os trechos da rota calculada.</p>
+          </div>
         </>
       )}
     </section>
