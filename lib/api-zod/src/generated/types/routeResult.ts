@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Place } from './place';
+import type { RouteLeg } from './routeLeg';
 
 export interface RouteResult {
+  legs: RouteLeg[];
   orderedPlaces: Place[];
   originalDistance: number;
   originalDuration: number;

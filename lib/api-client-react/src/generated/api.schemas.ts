@@ -27,7 +27,19 @@ export interface RouteInput {
   optimize?: boolean;
 }
 
+export interface RouteStep {
+  instruction: string;
+  distance: number;
+}
+
+export interface RouteLeg {
+  distance: number;
+  duration: number;
+  steps: RouteStep[];
+}
+
 export interface RouteResult {
+  legs: RouteLeg[];
   orderedPlaces: Place[];
   originalDistance: number;
   originalDuration: number;

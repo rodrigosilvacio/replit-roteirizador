@@ -76,8 +76,11 @@ components:
         optimize: { type: boolean, default: false }
     RouteResult:
       type: object
-      required: [distance, duration, coordinates, orderedPlaces, originalDistance, originalDuration, improved]
+      required: [distance, duration, coordinates, orderedPlaces, originalDistance, originalDuration, improved, legs]
       properties:
+        legs:
+          type: array
+          items: { $ref: "#/components/schemas/RouteLeg" }
         orderedPlaces:
           type: array
           items: { $ref: "#/components/schemas/Place" }
@@ -92,6 +95,21 @@ components:
           items:
             type: array
             items: { type: number }
+    RouteLeg:
+      type: object
+      required: [distance, duration, steps]
+      properties:
+        distance: { type: number }
+        duration: { type: number }
+        steps:
+          type: array
+          items: { $ref: "#/components/schemas/RouteStep" }
+    RouteStep:
+      type: object
+      required: [instruction, distance]
+      properties:
+        instruction: { type: string }
+        distance: { type: number }
     HealthStatus:
       type: object
       properties:

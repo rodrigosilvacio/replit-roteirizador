@@ -83,6 +83,14 @@ export const calculateRouteResponseOrderedPlacesItemLonMax = 180;
 
 
 export const CalculateRouteResponse = zod.object({
+  "legs": zod.array(zod.object({
+  "distance": zod.number(),
+  "duration": zod.number(),
+  "steps": zod.array(zod.object({
+  "instruction": zod.string(),
+  "distance": zod.number()
+}))
+})),
   "orderedPlaces": zod.array(zod.object({
   "label": zod.string(),
   "lat": zod.number().min(calculateRouteResponseOrderedPlacesItemLatMin).max(calculateRouteResponseOrderedPlacesItemLatMax),

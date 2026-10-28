@@ -9,5 +9,7 @@
 export * from './healthStatus';
 export * from './place';
 export * from './routeInput';
+export * from './routeLeg';
 export * from './routeResult';
+export * from './routeStep';
 export * from './searchPlacesParams';

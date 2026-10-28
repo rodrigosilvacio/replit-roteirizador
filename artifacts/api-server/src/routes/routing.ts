@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { SearchPlacesQueryParams, SearchPlacesResponse, CalculateRouteBody, CalculateRouteResponse } from "@workspace/api-zod";
 import { optimizeOrder } from "../lib/route-optimizer";
+import { instruction } from "../lib/directions";
 
 const router: IRouter = Router();
 const cache = new Map<string, { expires: number; data: unknown }>();
@@ -67,7 +68,7 @@ router.post("/route", async (req, res) => {
     const base = "https://routing.openstreetmap.de/routed-car";
     const coords = (points: typeof places) => points.map(p => `${p.lon},${p.lat}`).join(";");
     const getRoute = async (points: typeof places) => {
-      const result = await getJson(`${base}/route/v1/driving/${coords(points)}?overview=full&geometries=geojson&steps=false&continue_straight=false`);
+      const result = await getJson(`${base}/route/v1/driving/${coords(points)}?overview=full&geometries=geojson&steps=true&continue_straight=false`);
       if (result.code !== "Ok" || !result.routes?.length) throw new Error("NO_ROUTE");
       const r = result.routes[0];
       if (r.legs?.length !== points.length - 1 || !Number.isFinite(r.duration) || r.duration < 0 ||
@@ -101,6 +102,14 @@ router.post("/route", async (req, res) => {
       originalDistance: original.distance,
       originalDuration: original.duration,
       improved: route.duration < original.duration,
+      legs: route.legs.map((leg: any) => ({
+        distance: leg.distance,
+        duration: leg.duration,
+        steps: leg.steps.map((step: any) => ({
+          instruction: instruction(step),
+          distance: step.distance,
+        })),
+      })),
     }));
   } catch (err) {
     if (err instanceof Error && err.message === "NO_ROUTE") {

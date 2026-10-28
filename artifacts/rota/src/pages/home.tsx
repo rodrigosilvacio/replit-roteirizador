@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Crosshair, Info, Landmark, Loader2, Na
 import { PlaceInput } from "@/components/place-input";
 import { RouteMap, type MapPoint } from "@/components/route-map";
 import { RouteResultCard, pointLabel } from "@/components/route-result";
+import { RouteDirections } from "@/components/route-directions";
 
 const MAX_STOPS = 10;
 const EXAMPLE_ORIGIN: Place = { label: "Praça da Sé, São Paulo - SP", lat: -23.5503, lon: -46.6339 };
@@ -286,10 +287,11 @@ export default function Home() {
           </section>
         </aside>
 
-        <main className="relative h-[62dvh] min-h-[360px] w-full p-3 pt-0 md:sticky md:top-0 md:h-[100dvh] md:flex-1 md:self-start md:p-4">
-          <div className="relative h-full overflow-hidden rounded-2xl border border-border shadow-[0_20px_50px_-25px_hsl(200_38%_14%/0.5)]">
+        <main className="relative min-w-0 w-full p-3 pt-0 md:flex-1 md:self-start md:p-4">
+          <div className="relative h-[62dvh] min-h-[360px] overflow-hidden rounded-2xl border border-border shadow-[0_20px_50px_-25px_hsl(200_38%_14%/0.5)] md:h-[65dvh]">
             <RouteMap points={points} coordinates={result?.r.coordinates ?? null} />
           </div>
+          <RouteDirections result={result?.r ?? null} pending={pending !== null} />
         </main>
       </div>
     </div>
