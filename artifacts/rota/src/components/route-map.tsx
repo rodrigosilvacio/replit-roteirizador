@@ -3,17 +3,24 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Place } from "@workspace/api-client-react";
 
-type Props = { origin: Place | null; destination: Place | null; coordinates: number[][] | null };
+export type MapPoint = { place: Place; label: string; kind: "origin" | "stop" | "dest" };
+type Props = { points: MapPoint[]; coordinates: number[][] | null };
 
-const pin = (letter: string, bg: string, fg: string) =>
+const COLORS = {
+  origin: ["hsl(196 62% 22%)", "hsl(44 50% 97%)"],
+  stop: ["hsl(44 50% 97%)", "hsl(196 62% 22%)"],
+  dest: ["hsl(38 92% 52%)", "hsl(200 38% 12%)"],
+} as const;
+
+const pin = (letter: string, kind: MapPoint["kind"]) =>
   L.divIcon({
     className: "",
-    html: `<div class="rota-pin" style="background:${bg};color:${fg}"><span>${letter}</span></div>`,
+    html: `<div class="rota-pin" style="background:${COLORS[kind][0]};color:${COLORS[kind][1]}"><span>${letter}</span></div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 30],
   });
 
-export function RouteMap({ origin, destination, coordinates }: Props) {
+export function RouteMap({ points, coordinates }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -33,6 +40,8 @@ export function RouteMap({ origin, destination, coordinates }: Props) {
     return () => { ro.disconnect(); m.remove(); map.current = null; };
   }, []);
 
+  const key = JSON.stringify(points.map((p) => [p.label, p.kind, p.place.lat, p.place.lon]));
+
   useEffect(() => {
     const m = map.current, g = layer.current;
     if (!m || !g) return;
@@ -45,11 +54,15 @@ export function RouteMap({ origin, destination, coordinates }: Props) {
       L.polyline(line, { color: "hsl(38 92% 52%)", weight: 1.5, dashArray: "6 8" }).addTo(g);
       pts.push(...line);
     }
-    if (origin) { L.marker([origin.lat, origin.lon], { icon: pin("A", "hsl(196 62% 22%)", "hsl(44 50% 97%)"), title: origin.label }).addTo(g); pts.push([origin.lat, origin.lon]); }
-    if (destination) { L.marker([destination.lat, destination.lon], { icon: pin("B", "hsl(38 92% 52%)", "hsl(200 38% 12%)"), title: destination.label }).addTo(g); pts.push([destination.lat, destination.lon]); }
+    // draw in reverse so the origin sits on top when a round trip overlaps it
+    [...points].reverse().forEach((p) => {
+      L.marker([p.place.lat, p.place.lon], { icon: pin(p.label, p.kind), title: `${p.label} · ${p.place.label}` }).addTo(g);
+      pts.push([p.place.lat, p.place.lon]);
+    });
     if (pts.length === 1) m.flyTo(pts[0], 13, { duration: 0.8 });
     else if (pts.length > 1) m.flyToBounds(L.latLngBounds(pts), { padding: [40, 40], duration: 0.9 });
-  }, [origin, destination, coordinates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, coordinates]);
 
   return <div ref={el} className="h-full w-full" data-testid="map-route" aria-label="Mapa da rota" role="region" />;
 }

@@ -45,7 +45,15 @@ export const calculateRouteBodyDestinationLatMax = 90;
 export const calculateRouteBodyDestinationLonMin = -180;
 export const calculateRouteBodyDestinationLonMax = 180;
 
+export const calculateRouteBodyStopsItemLatMin = -90;
+export const calculateRouteBodyStopsItemLatMax = 90;
 
+export const calculateRouteBodyStopsItemLonMin = -180;
+export const calculateRouteBodyStopsItemLonMax = 180;
+
+export const calculateRouteBodyStopsMax = 10;
+
+export const calculateRouteBodyOptimizeDefault = false;
 
 export const CalculateRouteBody = zod.object({
   "origin": zod.object({
@@ -57,10 +65,32 @@ export const CalculateRouteBody = zod.object({
   "label": zod.string(),
   "lat": zod.number().min(calculateRouteBodyDestinationLatMin).max(calculateRouteBodyDestinationLatMax),
   "lon": zod.number().min(calculateRouteBodyDestinationLonMin).max(calculateRouteBodyDestinationLonMax)
-})
+}),
+  "stops": zod.array(zod.object({
+  "label": zod.string(),
+  "lat": zod.number().min(calculateRouteBodyStopsItemLatMin).max(calculateRouteBodyStopsItemLatMax),
+  "lon": zod.number().min(calculateRouteBodyStopsItemLonMin).max(calculateRouteBodyStopsItemLonMax)
+})).max(calculateRouteBodyStopsMax).optional(),
+  "optimize": zod.boolean().default(calculateRouteBodyOptimizeDefault)
 })
 
+export const calculateRouteResponseOrderedPlacesItemLatMin = -90;
+export const calculateRouteResponseOrderedPlacesItemLatMax = 90;
+
+export const calculateRouteResponseOrderedPlacesItemLonMin = -180;
+export const calculateRouteResponseOrderedPlacesItemLonMax = 180;
+
+
+
 export const CalculateRouteResponse = zod.object({
+  "orderedPlaces": zod.array(zod.object({
+  "label": zod.string(),
+  "lat": zod.number().min(calculateRouteResponseOrderedPlacesItemLatMin).max(calculateRouteResponseOrderedPlacesItemLatMax),
+  "lon": zod.number().min(calculateRouteResponseOrderedPlacesItemLonMin).max(calculateRouteResponseOrderedPlacesItemLonMax)
+})),
+  "originalDistance": zod.number(),
+  "originalDuration": zod.number(),
+  "improved": zod.boolean(),
   "distance": zod.number().describe('Meters'),
   "duration": zod.number().describe('Seconds without live traffic'),
   "coordinates": zod.array(zod.array(zod.number())).describe('Longitude latitude pairs')

@@ -10,4 +10,7 @@ import type { Place } from './place';
 export interface RouteInput {
   origin: Place;
   destination: Place;
+  /** @maxItems 10 */
+  stops?: Place[];
+  optimize?: boolean;
 }

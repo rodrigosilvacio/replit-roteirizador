@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { SearchPlacesQueryParams, SearchPlacesResponse, CalculateRouteBody, CalculateRouteResponse } from "@workspace/api-zod";
+import { optimizeOrder } from "../lib/route-optimizer";
 
 const router: IRouter = Router();
 const cache = new Map<string, { expires: number; data: unknown }>();
@@ -56,25 +57,56 @@ router.post("/route", async (req, res) => {
     res.status(400).json({ error: "Selecione uma origem e um destino válidos." });
     return;
   }
-  const { origin, destination } = parsed.data;
-  if (origin.lat === destination.lat && origin.lon === destination.lon) {
-    res.status(400).json({ error: "Escolha um destino diferente da origem." });
+  const { origin, destination, stops = [], optimize = false } = parsed.data;
+  const places = [origin, ...stops, destination];
+  if (places.every(p => p.lat === origin.lat && p.lon === origin.lon)) {
+    res.status(400).json({ error: "Inclua pelo menos dois locais diferentes para calcular o trajeto." });
     return;
   }
   try {
-    const coordinates = `${origin.lon},${origin.lat};${destination.lon},${destination.lat}`;
-    const result = await getJson(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=false`);
-    if (result.code !== "Ok" || !result.routes?.length) {
-      res.status(422).json({ error: "Não foi encontrada uma rota de carro entre esses locais." });
-      return;
+    const base = "https://routing.openstreetmap.de/routed-car";
+    const coords = (points: typeof places) => points.map(p => `${p.lon},${p.lat}`).join(";");
+    const getRoute = async (points: typeof places) => {
+      const result = await getJson(`${base}/route/v1/driving/${coords(points)}?overview=full&geometries=geojson&steps=false&continue_straight=false`);
+      if (result.code !== "Ok" || !result.routes?.length) throw new Error("NO_ROUTE");
+      const r = result.routes[0];
+      if (r.legs?.length !== points.length - 1 || !Number.isFinite(r.duration) || r.duration < 0 ||
+          !Number.isFinite(r.distance) || r.distance < 0 || r.geometry?.coordinates?.length < 2)
+        throw new Error("Invalid provider route");
+      return r;
+    };
+    const original = await getRoute(places);
+    let route = original;
+    let orderedPlaces = places;
+    if (optimize && stops.length >= 2) {
+      const table = await getJson(`${base}/table/v1/driving/${coords(places)}?annotations=duration`);
+      if (table.code !== "Ok" || !Array.isArray(table.durations)) throw new Error("Invalid provider matrix");
+      const order = optimizeOrder(table.durations);
+      if (order.some((value, i) => value !== i)) {
+        const candidatePlaces = order.map(i => places[i]);
+        const candidate = await getRoute(candidatePlaces);
+        // Full route may differ from pairwise matrix due to road maneuvers.
+        // Only claim improvement after measuring both full routes.
+        if (candidate.duration < original.duration) {
+          route = candidate;
+          orderedPlaces = candidatePlaces;
+        }
+      }
     }
-    const route = result.routes[0];
     res.json(CalculateRouteResponse.parse({
       distance: route.distance,
       duration: route.duration,
       coordinates: route.geometry.coordinates,
+      orderedPlaces,
+      originalDistance: original.distance,
+      originalDuration: original.duration,
+      improved: route.duration < original.duration,
     }));
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message === "NO_ROUTE") {
+      res.status(422).json({ error: "Não há rota de carro passando por todas as paradas. Confira os endereços." });
+      return;
+    }
     req.log.warn("Routing provider unavailable");
     res.status(503).json({ error: "O serviço de rotas está indisponível. Tente novamente em instantes." });
   }

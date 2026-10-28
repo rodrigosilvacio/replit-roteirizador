@@ -69,10 +69,21 @@ components:
       properties:
         origin: { $ref: "#/components/schemas/Place" }
         destination: { $ref: "#/components/schemas/Place" }
+        stops:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/Place" }
+        optimize: { type: boolean, default: false }
     RouteResult:
       type: object
-      required: [distance, duration, coordinates]
+      required: [distance, duration, coordinates, orderedPlaces, originalDistance, originalDuration, improved]
       properties:
+        orderedPlaces:
+          type: array
+          items: { $ref: "#/components/schemas/Place" }
+        originalDistance: { type: number }
+        originalDuration: { type: number }
+        improved: { type: boolean }
         distance: { type: number, description: Meters }
         duration: { type: number, description: Seconds without live traffic }
         coordinates:

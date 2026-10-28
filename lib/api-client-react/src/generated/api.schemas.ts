@@ -22,9 +22,16 @@ export interface Place {
 export interface RouteInput {
   origin: Place;
   destination: Place;
+  /** @maxItems 10 */
+  stops?: Place[];
+  optimize?: boolean;
 }
 
 export interface RouteResult {
+  orderedPlaces: Place[];
+  originalDistance: number;
+  originalDuration: number;
+  improved: boolean;
   /** Meters */
   distance: number;
   /** Seconds without live traffic */

@@ -5,8 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Place } from './place';
 
 export interface RouteResult {
+  orderedPlaces: Place[];
+  originalDistance: number;
+  originalDuration: number;
+  improved: boolean;
   /** Meters */
   distance: number;
   /** Seconds without live traffic */

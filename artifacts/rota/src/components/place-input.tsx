@@ -6,14 +6,16 @@ import { Loader2, MapPin, SearchX, WifiOff, X } from "lucide-react";
 type Props = {
   id: string;
   label: string;
-  marker: "A" | "B";
+  marker: string;
+  tone?: "origin" | "dest" | "stop";
+  placeholder?: string;
   value: string;
   selected: Place | null;
   onTextChange: (text: string) => void;
   onSelect: (place: Place) => void;
 };
 
-export function PlaceInput({ id, label, marker, value, selected, onTextChange, onSelect }: Props) {
+export function PlaceInput({ id, label, marker, tone, placeholder, value, selected, onTextChange, onSelect }: Props) {
   const [debounced, setDebounced] = useState(value.trim());
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -49,7 +51,8 @@ export function PlaceInput({ id, label, marker, value, selected, onTextChange, o
     setActive(-1);
   };
 
-  const isA = marker === "A";
+  const t = tone ?? (marker === "A" ? "origin" : "dest");
+  const isA = t === "origin";
 
   return (
     <div ref={boxRef} className="relative">
@@ -60,7 +63,7 @@ export function PlaceInput({ id, label, marker, value, selected, onTextChange, o
       <div
         className={`group flex items-center gap-3 rounded-xl border bg-card px-3 transition-all duration-200 focus-within:border-accent focus-within:shadow-[0_0_0_3px_hsl(var(--accent)/0.25)] ${selected ? "border-primary/40" : "border-input"}`}
       >
-        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold ${isA ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"}`}>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold ${isA ? "bg-primary text-primary-foreground" : t === "stop" ? "border-2 border-primary bg-card text-primary" : "bg-accent text-accent-foreground"}`}>
           {marker}
         </span>
         <input
@@ -68,7 +71,7 @@ export function PlaceInput({ id, label, marker, value, selected, onTextChange, o
           data-testid={`input-${id}`}
           value={value}
           autoComplete="off"
-          placeholder={isA ? "De onde você sai?" : "Para onde você vai?"}
+          placeholder={placeholder ?? (isA ? "De onde você sai?" : "Para onde você vai?")}
           role="combobox"
           aria-expanded={showPanel}
           aria-controls={`${id}-list`}
